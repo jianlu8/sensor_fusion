@@ -1,0 +1,110 @@
+<launch>
+  <env name="GLOG_minloglevel" value="1" />  <!-- 0: INFO; 1: WARNING; 2: ERROR; 3: FATAL -->
+  <node name="sensors_fusion_node" type="sensors_fusion_node" pkg="sensors_fusion" clear_params="true" output="screen">
+    <!-- parameters for sensor control -->
+    <param name="sensors_fusion_param_dir" type="string" value="/home/cicv/minibus/38号车/minibus_param.ini" />
+    <param name="use_lidar" type="bool" value="true" />
+    <param name="use_cam_long" type="bool" value="false" />
+    <param name="use_cam_short" type="bool" value="false" />
+    <param name="use_radar" type="bool" value="true" />
+    <!-- parameters for visualization -->
+    <param name="vis_lidar_poly" type="bool" value="true" />
+    <param name="vis_cam_sphere" type="bool" value="false" />
+    <param name="vis_radar_sphere" type="bool" value="true" />
+    <param name="proj_ptcloud" type="bool" value="true" />
+    <!-- parameters for log level -->
+    <param name="log_lidar" type="bool" value="false" />
+    <param name="log_cam" type="bool" value="false" />
+    <param name="log_radar" type="bool" value="false" />
+    <param name="log_fusion" type="bool" value="false" />
+    <!--是否使用高精度地图-->
+    <param name="Use_HDMap" type="bool" value="true" />
+    <param name="HDMap_input_topic" type="string" value="/yjkj_vector_map/leftborder_marker" />
+
+    <!--融合输出给规控的目标进行区域限定-->
+    <param name="sensors_fusion_output_use_edge_filter" type="bool" value="false" />
+    <param name="left_edge" type="double" value="-5" />
+    <param name="right_edge" type="double" value="5" />
+    <param name="front_edge" type="double" value="50" />
+    <param name="rear_edge" type="double" value="-50" />
+    <!--超声波雷达外参和需要用到的topics和配置参数-->
+    <rosparam param="UltrasonicParam_x" >[-0.8, -0.36, 0.36, 0.8, 0.8, -0.8, -0.8, 0.8, 0.8,0.36,-0.36,-0.8,-0.8,0.8,0.8,-0.8]</rosparam>
+    <rosparam param="UltrasonicParam_y" >[3.65, 3.65, 3.65, 3.65, 3.35, 3.35, 2.3, 2.3, -0.8,-0.8,-0.8,-0.8,-0.5,-0.5,0.5,0.5]</rosparam>
+    <rosparam param="UltrasonicParam_angle" >[-90, 0, 0, 90, 90, -90, -90, 90, 90,180,180,-90,-90,90,90,-90]</rosparam>
+    <!--超声波雷达硬件数据开关，1表示使用该标号的超声波雷达数据，0表示不使用该超声波雷达数据-->
+    <rosparam param="Ultrasonic_switch" >[1, 1, 1, 1, 1, 1, 1, 1, 1,1,1,1,1,1,1,1]</rosparam>
+    <param name="ultrasonic_input_topic" type="string" value="/minibus/ultrasonic" />
+    <param name="vehicle_can_info_input_topic" type="string" value="/minibus/vehicle/info" />
+    <param name="ultrasonic_use_limit_speed" type="double" value="1.5" />
+
+
+    <!--融合算法将目标数据转到map坐标系下的GPS基准点-->
+    <param name="g_base_latitude" type="double" value="30.4462647" />
+    <param name="g_base_longitude" type="double" value="114.075741" />
+    <!--融合算法调用激光雷达目标数据topic-->
+    <param name="lidar_input_topic" type="string" value="/minibus/lidar_moving_objects" />
+    <!--是否使用激光雷达目标速度-->
+    <param name="is_use_lidar_moving_objects_speed" type="bool" value="false" />
+            <!--激光雷达传输给融合的目标是否进行区域限制-->
+    <param name="lidar_obstacles_input_sensors_fusion_use_edge_filter" type="bool" value="false" />
+    <param name="use_lidar_left_edge" type="double" value="-5" />
+    <param name="use_lidar_right_edge" type="double" value="5" />
+    <param name="use_lidar_front_edge" type="double" value="50" />
+    <param name="use_lidar_rear_edge" type="double" value="-50" />
+    <!--融合算法调用视觉检测目标数据topic-->
+    <param name="camera_input_topic" type="string" value="/minibus/camera_moving_objects" />
+    <!--融合算法调用毫米波雷达检测目标数据topic-->
+    <param name="radar_input_topic" type="string" value="/minibus/mmwave1" />
+    <param name="back_radar_input_topic" type="string" value="/minibus/rear/mmwave" />
+    <param name="left_back_angle_radar_input_topic" type="string" value="/minibus/left_back/corner_mmwavel" />
+    <param name="right_back_angle_radar_input_topic" type="string" value="/minibus/right_back/corner_mmwavel" />
+    <param name="left_front_angle_radar_input_topic" type="string" value="/minibus/left_front/corner_mmwavel" />
+    <param name="right_front_angle_radar_input_topic" type="string" value="/minibus/right_front/corner_mmwavel" />
+    <param name="is_pub_filtered_angle_radar" type="bool" value="true" />
+    <param name="angle_radar_filtered_output_topic" type="string" value="/minibus/corner_mmwavel" />
+
+    <!--融合算法对外输出目标数据topic-->
+    <param name="fusion_output_topic" type="string" value="/minibus/moving_objects" />
+    <param name="fusion_polygon_output_topic" type="string" value="/minibus/polygon_objects" />
+    <param name="gps_input_topic" type="string" value="/minibus/bestposition" />
+    <param name="gps_to_vehicle_pose" type="string" value="/minibus/gnss_pose" />
+    <param name="tf_input_topic" type="string" value="/tf" />
+    <!--超声波雷达车速使用范围-->
+
+    <!--毫米波雷达使用车辆横向运动速度范围,超过阈值则毫米波雷达数据不再使用，当前无法通过横向车速进行判断，其值未使用-->
+    <param name="radar_use_lateral_limit_speed" type="double" value="0.1" />
+    <!--毫米波雷达使用车辆横向角速度方差范围,则該帧毫米波雷达所有数据不再使用-->
+    <param name="radar_use_yaw_variance_limit" type="double" value="0.1" />
+     <!--毫米波雷达在车辆坐标系下，横向距离大于其阈值，該雷达目标直接被舍弃-->
+    <param name="radar_use_lateral_limit_dis" type="double" value="5" />
+    <param name="radar_use_vertical_limit_dis" type="double" value="10" />
+    <!--毫米波雷达在车辆坐标系下，其绝对速度大于其阈值，該雷达目标直接被舍弃-->
+    <param name="radar_use_absolute_limit_speed" type="double" value="0.5" />
+    <param name="path_config_folder" type="string" value="$(find sensors_fusion)" />
+    <!--是否使用离线仿真数据，主要是离线和实车的rviz可视化时间戳不一致-->
+    <param name="is_simulation" type="bool" value="false" />
+    <param name="is_use_fusion_time" type="bool" value="true" />
+    <rosparam>
+    resize_factor: 1.0
+    <!-- frame id setting -->
+    frame_id_cam: camera_long
+    frame_id_lidar: velodyne64
+    frame_id_radar: conti_radar
+    frame_id_fusion: /base_link
+    </rosparam>
+  </node>
+
+  <!-- Sharing Bus -->
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_lidar_mid" args="0 3.82 0.82 0 0 0  /base_link /lidar_mid 10" />
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_front_mmwave" args="0 3.82 0 0 0 0  /base_link /front_mmwave 10" />
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_rear_mmwave" args="0 -2.92 0 0 0 0  /base_link /rear_mmwave 10" />
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_cmm_left_back" args="-0.76 -0.9 0.82 0 0 0  /base_link /cmm_left_back 10" />
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_cmm_right_back" args="0.76 -0.89 0.79 0 0 0  /base_link /cmm_right_back 10" />
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_cmm_left_front" args="-0.76 3.69 0.81 0 0 0  /base_link /cmm_left_front 10" />
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_cmm_right_front" args="0.76 3.7 0.80 0 0 0  /base_link /cmm_right_front 10" />
+
+  <!-- Truck -->
+<!--     <node pkg="tf" type="static_transform_publisher" name="base_link_to_lidar_mid" args="0 11.78 0.82 0 0 0  /base_link /lidar_mid 10" />
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_front_mmwave" args="0 11.78 0 0 0 0  /base_link /front_mmwave 10" />
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_rear_mmwave" args="0 -2.92 0 0 0 0  /base_link /rear_mmwave 10" />
+ --></launch>
